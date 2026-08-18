@@ -1,0 +1,21 @@
+{
+  "name": "plugin-agentnet",
+  "version": "0.0.1",
+  "description": "elizaOS plugin for the AgentNet on-chain skill marketplace. Read tier (search, free equip, profiles) over public HTTP/RPC; write tier (buy, publish, posts, soul, memory) fronts the official @iqlabs-official/agentnet-mcp stdio server, double-gated off by default. Local scaffold; publish name TBD with IQLabs.",
+  "private": true,
+  "license": "MIT",
+  "repository": { "type": "git", "url": "TBD: publish home pending with IQLabs" },
+  "type": "module",
+  "main": "src/index.js",
+  "files": ["src", "test", "demo.mjs"],
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "test:live": "node --test \"test/live/*.test.js\""
+  },
+  "peerDependencies": {
+    "@elizaos/core": ">=2.0.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@elizaos/core": { "optional": true }
+  }
+}
