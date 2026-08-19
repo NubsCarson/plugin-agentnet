@@ -20,11 +20,16 @@ const TRIGGER_WORDS =
 const FILLER =
   /\b(search|find|look ?up|show|list|browse|get|give|tell|whats?|what|is|are|there|the|a|an|me|us|any|all|everything|please|some|for|of|in|on|out|do|you|have|got|currently|right|now|see|to|about|can|could|i)\b/gi;
 
-/** Strip trigger phrasing and filler so only content words reach the matcher. */
+/** Strip trigger phrasing and filler so only content words reach the matcher.
+ *  Lookarounds keep hyphen-joined names intact: "iq-onchain-db" must not lose
+ *  its "onchain" to the on-chain trigger word. */
+const hyphenSafe = (re) => new RegExp(`(?<![\\w-])(?:${re.source.replace(/\\b/g, "")})(?![\\w-])`, "gi");
+const TRIGGER_STRIP = hyphenSafe(TRIGGER_WORDS);
+const FILLER_STRIP = hyphenSafe(FILLER);
 export function extractQuery(text) {
   return (text || "")
-    .replace(new RegExp(TRIGGER_WORDS.source, "gi"), " ")
-    .replace(FILLER, " ")
+    .replace(TRIGGER_STRIP, " ")
+    .replace(FILLER_STRIP, " ")
     .replace(/[?!.,;:]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -37,7 +42,8 @@ export const searchAgentnetSkills = {
     "USE THIS whenever the user asks what skills, workflows, or items exist, what's on the market, what's " +
     "available, what they can buy or equip, or to find something by topic. Read-only: it queries the live " +
     "public catalog indexer, costs nothing, and needs no wallet. Always report what it actually returns; " +
-    "never guess or invent catalog contents.",
+    "never guess or invent catalog contents. Do NOT use this when the user asks to equip or install a " +
+    "specific named item; use EQUIP_AGENTNET_SKILL for that instead.",
   similes: ["FIND_AGENTNET_SKILL", "BROWSE_SKILL_MARKET", "AGENTNET_CATALOG", "LIST_SKILLS", "WHATS_ON_THE_MARKET"],
   tags: [],
 
@@ -66,7 +72,7 @@ export const searchAgentnetSkills = {
       };
     } catch (err) {
       const text = `AgentNet search failed: ${err instanceof Error ? err.message : String(err)}`;
-      if (callback) await callback({ text }, "SEARCH_AGENTNET_SKILLS");
+      if (callback) await callback({ text, actions: ["SEARCH_AGENTNET_SKILLS"] }, "SEARCH_AGENTNET_SKILLS");
       return { success: false, text };
     }
   },

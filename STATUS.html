@@ -1,0 +1,186 @@
+<title>AgentNet Status Board</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#f6f5fb; --panel:#ffffff; --panel-2:#faf9ff; --ink:#1a1725; --ink-soft:#585269;
+    --line:#e6e2f2; --line-strong:#d6d0ea;
+    --violet:#6d5efc; --violet-soft:#efe9ff; --violet-ink:#4a3fd0;
+    --done:#0f9d58; --done-soft:#e4f5ec;
+    --local:#2f6fed; --local-soft:#e6efff;
+    --wait:#c07a00; --wait-soft:#fdf1dd;
+    --decide:#8b3fd6; --decide-soft:#f3e8fd;
+    --shadow:0 1px 2px rgba(26,23,37,.05),0 6px 24px rgba(26,23,37,.06);
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  :root:not([data-theme="light"]){}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e0c16; --panel:#171326; --panel-2:#1d1830; --ink:#ece9f6; --ink-soft:#a49dbf;
+      --line:#2a2440; --line-strong:#3a3358;
+      --violet:#9a8dff; --violet-soft:#241d40; --violet-ink:#c3b9ff;
+      --done:#4bd88a; --done-soft:#123322;
+      --local:#7aa8ff; --local-soft:#132342;
+      --wait:#f0b64d; --wait-soft:#3a2c10;
+      --decide:#c79bff; --decide-soft:#2a1c40;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e0c16; --panel:#171326; --panel-2:#1d1830; --ink:#ece9f6; --ink-soft:#a49dbf;
+    --line:#2a2440; --line-strong:#3a3358;
+    --violet:#9a8dff; --violet-soft:#241d40; --violet-ink:#c3b9ff;
+    --done:#4bd88a; --done-soft:#123322;
+    --local:#7aa8ff; --local-soft:#132342;
+    --wait:#f0b64d; --wait-soft:#3a2c10;
+    --decide:#c79bff; --decide-soft:#2a1c40;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;
+    -webkit-font-smoothing:antialiased;padding:clamp(1rem,3vw,2.5rem)}
+  .wrap{max-width:1060px;margin:0 auto}
+  header.top{margin-bottom:1.75rem}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--violet);margin:0 0 .5rem}
+  h1{font-size:clamp(1.6rem,4.5vw,2.4rem);line-height:1.1;margin:0 0 .6rem;letter-spacing:-.02em;text-wrap:balance}
+  .lede{color:var(--ink-soft);max-width:62ch;margin:0;font-size:1.02rem}
+  .lede b{color:var(--ink);font-weight:600}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin:1.5rem 0 2rem}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.9rem 1rem;box-shadow:var(--shadow)}
+  .stat .n{font-family:var(--mono);font-size:1.5rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:.76rem;color:var(--ink-soft);margin-top:.15rem}
+  h2.sec{font-size:.8rem;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
+    margin:2.2rem 0 .9rem;padding-bottom:.5rem;border-bottom:1px solid var(--line)}
+  .grid{display:grid;gap:.85rem}
+  .grid.two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.05rem 1.15rem;box-shadow:var(--shadow)}
+  .card.hi{border-color:var(--violet);background:linear-gradient(180deg,var(--violet-soft),var(--panel) 60%)}
+  .card h3{margin:0 0 .1rem;font-size:1.02rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .card .path{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);word-break:break-all}
+  .card p{margin:.55rem 0 0;font-size:.9rem;color:var(--ink-soft)}
+  .card p b{color:var(--ink);font-weight:600}
+  .chip{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.03em;padding:.16rem .5rem;border-radius:999px;
+    white-space:nowrap;text-transform:uppercase}
+  .c-done{background:var(--done-soft);color:var(--done)}
+  .c-local{background:var(--local-soft);color:var(--local)}
+  .c-wait{background:var(--wait-soft);color:var(--wait)}
+  .c-decide{background:var(--decide-soft);color:var(--decide)}
+  ul.tick{list-style:none;padding:0;margin:.6rem 0 0}
+  ul.tick li{font-size:.88rem;color:var(--ink-soft);padding-left:1.35rem;position:relative;margin:.3rem 0}
+  ul.tick li::before{content:"";position:absolute;left:0;top:.5em;width:.5rem;height:.5rem;border-radius:50%;background:var(--violet)}
+  ul.tick li.no::before{background:var(--line-strong)}
+  ul.tick li b{color:var(--ink);font-weight:600}
+  .decide{border-left:3px solid var(--decide)}
+  .rec{margin-top:.7rem;font-size:.85rem;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:.6rem .75rem}
+  .rec b{color:var(--decide)}
+  .mono{font-family:var(--mono)}
+  code{font-family:var(--mono);font-size:.82em;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:.08rem .35rem}
+  footer{margin-top:2.4rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.8rem;color:var(--ink-soft)}
+  footer b{color:var(--ink)}
+  .note{background:var(--wait-soft);border:1px solid color-mix(in srgb,var(--wait) 30%,transparent);border-radius:10px;
+    padding:.65rem .85rem;font-size:.83rem;color:var(--ink);margin:.6rem 0 0}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">AgentNet · contribution status &amp; decisions · 18 Aug 2026</p>
+    <h1>What we have, and what's yours to decide</h1>
+    <p class="lede">The north star hasn't changed: be a <b>genuinely good contributor</b> to AgentNet — real, verified work that stands on its own. This board is the honest inventory. Green = landed. Blue = built &amp; verified locally, nothing pushed. Amber = waiting on zo. Purple = <b>your call</b>.</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="n">68/68</div><div class="l">plugin tests passing</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">local repos, durable</div></div>
+    <div class="stat"><div class="n">12</div><div class="l">PRs #132–#143 filed</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">pushes this session</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">decisions open</div></div>
+  </div>
+
+  <h2 class="sec">Built &amp; verified locally — durable on your Mac, nothing shipped</h2>
+  <div class="grid two">
+    <div class="card hi">
+      <h3>plugin-agentnet <span class="chip c-local">local · ready</span></h3>
+      <div class="path">~/Git/plugin-agentnet · 31 files · 2 commits</div>
+      <p>The elizaOS plugin for the AgentNet skill market. <b>Recovered from the reboot wipe</b> (rebuilt from session logs, byte-verified by the suite) and improved: read tier (search / free-equip / profiles) plus a double-gated write tier fronting her MCP server.</p>
+      <ul class="tick">
+        <li><b>68/68</b> tests green, incl. adversarial + fail-closed gates</li>
+        <li>Fixed live: search now fires on <span class="mono">"whats on the market?"</span>, not just literal "agentnet"</li>
+        <li>Writes &amp; spend <b>off by default</b> (two env gates)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>eliza-instance <span class="chip c-local">rebuildable</span></h3>
+      <div class="path">~/Git/eliza-instance · stopped</div>
+      <p>A fully isolated elizaOS agent to chat-test the plugin. <b>Cerebras only</b> (gpt-oss-120b), no cloud, writes gated off. You chatted with it; it hit the live chain and refused a buy. Now stopped.</p>
+      <ul class="tick">
+        <li>Restart anytime: <code>cd ~/Git/eliza-instance &amp;&amp; ./start.sh &amp;&amp; bun chat.mjs</code></li>
+        <li>Source committed so a reboot won't force a rebuild</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>steward · @stwd/solana-signer <span class="chip c-done">merged</span></h3>
+      <div class="path">~/Git/steward</div>
+      <p>Standard Solana signer over Steward's policy-checked vault route — a <b>general signing bridge</b>, AgentNet is just its first consumer. Custody never leaves the vault. PR <b>#334 merged</b>.</p>
+    </div>
+    <div class="card">
+      <h3>Recovery hardening <span class="chip c-done">done</span></h3>
+      <p>Root cause of the loss: the scratchpad lives in <code>/private/tmp</code>, which macOS clears on reboot. Keepable work now goes to <code>~/Git</code> and is git-committed. Saved as a standing rule so it can't repeat.</p>
+    </div>
+  </div>
+
+  <h2 class="sec">On GitHub — filed as RemilioNubilio <span style="text-transform:none;font-family:var(--sans);letter-spacing:0">(from earlier sessions; live states not re-fetched today — see note)</span></h2>
+  <div class="grid two">
+    <div class="card">
+      <h3>CLI / surfaces stack <span class="chip c-done">shipped earlier</span></h3>
+      <p>12 PRs <b>#132–#143</b> (CLI, webview, vscode, android) + docs. The <code>agentnet</code> CLI you play-tested; earlier versions on npm carried your code. Your own issues <b>#164 / #175 resolved by zo</b>.</p>
+    </div>
+    <div class="card">
+      <h3>Findings + fixes <span class="chip c-wait">awaiting zo</span></h3>
+      <p>Issue <b>#187</b> (6 upstream findings) and fix PRs <b>#188–#191</b> — including the additive remote-signer hook. Filed, sitting for her review.</p>
+    </div>
+    <div class="card">
+      <h3>QA / integration proof <span class="chip c-done">confirmed</span></h3>
+      <p>QA issue <b>#144</b>; zo publicly confirmed the AgentNet ↔ Eliza MCP integration passes end-to-end.</p>
+    </div>
+    <div class="card">
+      <h3>PR-watch <span class="chip c-wait">quiet</span></h3>
+      <p>The 12 tracked PRs are <b>unchanged</b> vs baseline this session. No new comments, reviews, or merges from zo to react to.</p>
+    </div>
+  </div>
+
+  <h2 class="sec">Decisions — your call</h2>
+  <div class="grid">
+    <div class="card decide">
+      <h3>1 · Ship the eliza plugin? <span class="chip c-decide">decide</span></h3>
+      <p>It's recovered, 68/68, and proven in a real runtime — but it lives only on your Mac. Nothing is public yet.</p>
+      <div class="rec"><b>My rec:</b> publish it as a repo under <b>NubsCarson</b> (your personal account) with the MIT license it already carries, so it's real and citable — then offer it to zo / IQLabs when she signals she wants the write tier. Low risk, all read-tier by default, and it's yours to point at.</div>
+    </div>
+    <div class="card decide">
+      <h3>2 · Post the #105 run-record comment? <span class="chip c-decide">decide</span></h3>
+      <p>Drafted and held for your eyes. It's a factual run-record note on her thread — no ask, no nudge.</p>
+      <div class="rec"><b>My rec:</b> hold until after you've decided #1, so anything you reference is real and linkable. Then I show you the exact text before anything posts.</div>
+    </div>
+    <div class="card decide">
+      <h3>3 · Steward write-tier — push further? <span class="chip c-decide">decide</span></h3>
+      <p>The signer bridge is general and merged. The AgentNet write path through it is built but gated. It only goes live when <i>you</i> arm the two gates.</p>
+      <div class="rec"><b>My rec:</b> leave it gated as a proven capability, not a live default. Arm it only for a deliberate demo you're watching.</div>
+    </div>
+  </div>
+
+  <h2 class="sec">Guardrails I'm holding to</h2>
+  <div class="card">
+    <ul class="tick">
+      <li><b>No pushes / no remote actions</b> without your explicit go — nothing left your machine this session</li>
+      <li><b>Verify before posting</b> to her — anything addressed to zo you see first; claims are checked against her code, not memory</li>
+      <li><b>Writes &amp; spend gated off</b> by default across plugin and steward</li>
+      <li><b>No eliza cloud</b> — local Cerebras only, as you set</li>
+    </ul>
+  </div>
+
+  <div class="note">One recoverable loss: the 5-doc <b>ideas folder</b> (future integrations, written in her plans style) was in the wiped scratchpad. It's reconstructable from the logs the same way the plugin was — say the word and I'll bring it back into <code>~/Git</code>.</div>
+
+  <footer>
+    <b>Honesty note:</b> the local numbers (68/68, repos, commits) I verified on disk just now. The GitHub PR states are carried from earlier sessions and were <b>not re-fetched today</b>, because you asked for no remote actions — so treat those as "last known," not live. Nothing here has been shipped or pushed. · Luna · 18 Aug 2026
+  </footer>
+</div>

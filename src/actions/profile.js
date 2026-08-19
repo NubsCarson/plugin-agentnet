@@ -58,7 +58,7 @@ export const agentnetProfile = {
   handler: async (runtime, message, _state, _options, callback) => {
     const { indexerUrl, gatewayUrl } = agentnetConfig(runtime);
     const deliver = async (text) => {
-      if (callback) await callback({ text }, "AGENTNET_PROFILE");
+      if (callback) await callback({ text, actions: ["AGENTNET_PROFILE"] }, "AGENTNET_PROFILE");
     };
     const wallet = extractWallet(message?.content?.text ?? "");
     if (!wallet) {

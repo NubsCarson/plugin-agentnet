@@ -246,7 +246,7 @@ function makeWriteAction(def, getClient) {
     // with the exact setting to flip, calling nothing downstream.
     handler: async (runtime, message, _state, options, callback) => {
       const deliver = async (text) => {
-        if (callback) await callback({ text }, def.name);
+        if (callback) await callback({ text, actions: [def.name] }, def.name);
       };
       const fail = async (text) => {
         await deliver(text);

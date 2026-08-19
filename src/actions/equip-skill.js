@@ -15,7 +15,10 @@ import { fetchMintMetadata } from "../lib/chain.js";
 import { agentnetConfig, fetchCatalog, fetchInscription } from "../lib/indexer.js";
 import { renderSkillMd, slugify, writeSkillMd } from "../lib/skillfile.js";
 
-const TRIGGER = /\b(equip|install|add)\b[\s\S]*\b(agentnet|skill|workflow)\b|\bagentnet\b[\s\S]*\b(equip|install)\b/i;
+// "equip" is domain vocabulary on its own; install/add/grab also fire when the
+// message names AgentNet, a skill/workflow, a slug-like name, or a mint.
+const TRIGGER =
+  /\b(un)?equip\b|\b(install|add|grab)\b[\s\S]*(\bagentnet\b|\bskills?\b|\bworkflows?\b|[a-z0-9]+(-[a-z0-9]+)+|[1-9A-HJ-NP-Za-km-z]{32,44})/i;
 const BASE58_RE = /\b[1-9A-HJ-NP-Za-km-z]{32,44}\b/g;
 
 /** Resolve a catalog item from free text: exact mint token first, then any
@@ -49,7 +52,9 @@ export const equipAgentnetSkill = {
   description:
     "Equip a FREE skill or workflow from the AgentNet on-chain marketplace: fetch its inscribed body " +
     "(mint metadata via mainnet RPC, content via the gateway) and install it as a local SKILL.md. " +
-    "Read-only on chain; priced items require the AgentNet MCP write tier.",
+    "USE THIS (not SEARCH_AGENTNET_SKILLS) whenever the user asks to equip, install, add, or grab a " +
+    "specific item they name by slug or mint. Read-only on chain; priced items require the AgentNet " +
+    "MCP write tier.",
   similes: ["INSTALL_AGENTNET_SKILL", "ADD_AGENTNET_SKILL", "EQUIP_SKILL_FROM_MARKET"],
   tags: [],
 
@@ -63,7 +68,7 @@ export const equipAgentnetSkill = {
   handler: async (runtime, message, _state, _options, callback) => {
     const { indexerUrl, gatewayUrl, rpcUrl, skillsDir } = agentnetConfig(runtime);
     const deliver = async (text) => {
-      if (callback) await callback({ text }, "EQUIP_AGENTNET_SKILL");
+      if (callback) await callback({ text, actions: ["EQUIP_AGENTNET_SKILL"] }, "EQUIP_AGENTNET_SKILL");
     };
     try {
       const { items } = await fetchCatalog(indexerUrl, { limit: 100 });
@@ -122,6 +127,20 @@ export const equipAgentnetSkill = {
       {
         name: "agent",
         content: { text: "Equipped iq-onchain-db from the AgentNet market.", actions: ["EQUIP_AGENTNET_SKILL"] },
+      },
+    ],
+    [
+      { name: "user", content: { text: "equip iq-onchain-db" } },
+      {
+        name: "agent",
+        content: { text: "Equipping iq-onchain-db.", actions: ["EQUIP_AGENTNET_SKILL"] },
+      },
+    ],
+    [
+      { name: "user", content: { text: "install the fork-session skill" } },
+      {
+        name: "agent",
+        content: { text: "That item is priced; buying runs through the AgentNet MCP write tier.", actions: ["EQUIP_AGENTNET_SKILL"] },
       },
     ],
   ],
