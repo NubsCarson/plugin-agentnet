@@ -87,7 +87,8 @@ export function resolveSigner(runtime) {
   if (!flagTrue(get("AGENTNET_SIGNER_HOOK"))) {
     return { ok: true, mode: "steward", ready: false, url, reason: WAITING_ON_UPSTREAM };
   }
-  return { ok: true, mode: "steward", ready: true, url };
+  const token = String(get("AGENTNET_WALLET_REMOTE_TOKEN") || "");
+  return { ok: true, mode: "steward", ready: true, url, ...(token ? { token } : {}) };
 }
 
 /**
@@ -99,7 +100,7 @@ export function resolveSigner(runtime) {
  * { ok: false, error } with copy naming the URL and the failure.
  * `fetchImpl` is injectable for tests.
  */
-export async function probeStewardBridge(url, fetchImpl = globalThis.fetch) {
+export async function probeStewardBridge(url, fetchImpl = globalThis.fetch, token = undefined) {
   const base = String(url).replace(/\/+$/, "");
   const refuse = (detail) => ({
     ok: false,
@@ -111,7 +112,7 @@ export async function probeStewardBridge(url, fetchImpl = globalThis.fetch) {
   });
   let res;
   try {
-    res = await fetchImpl(`${base}/pubkey`);
+    res = await fetchImpl(`${base}/pubkey`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
   } catch (err) {
     return refuse(err instanceof Error ? err.message : String(err));
   }

@@ -32,6 +32,7 @@ export function spendAllowed(runtime) {
 /** Env vars forwarded verbatim to the spawned server when set. */
 const FORWARDED_SETTINGS = [
   "AGENTNET_WALLET_KEYFILE",
+  "AGENTNET_WALLET_REMOTE_TOKEN",
   "AGENTNET_NETWORK",
   "AGENTNET_HOME",
   "AGENTNET_ELIZA_CHARACTER",
@@ -84,7 +85,7 @@ export async function spawnConnect(
   const cfg = mcpSpawnConfig(runtime);
   const signer = resolveSigner(runtime);
   if (signer.mode === "steward") {
-    const probe = await probeStewardBridge(signer.url, fetchImpl);
+    const probe = await probeStewardBridge(signer.url, fetchImpl, signer.token);
     if (!probe.ok) throw new Error(`agentnet write tier unavailable: ${probe.error}`);
   }
   const client = new McpClient(makeTransport(cfg));
