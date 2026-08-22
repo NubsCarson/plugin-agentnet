@@ -7,10 +7,14 @@ elizaOS plugin for [AgentNet](https://github.com/IQCoreTeam/AgentNet), the on-ch
 
 ## Install
 
-Local scaffold for now (npm name pending with IQLabs). Add to the character:
+```
+npm install @nubscarson/plugin-agentnet
+```
+
+Add to the character:
 
 ```json
-{ "plugins": ["plugin-agentnet"] }
+{ "plugins": ["@nubscarson/plugin-agentnet"] }
 ```
 
 Node >= 18. The write tier needs `npx` on PATH (or set `AGENTNET_MCP_COMMAND`).
@@ -27,6 +31,7 @@ All settings resolve through `runtime.getSetting` (character secrets or env).
 | `AGENTNET_SIGNER` | `keyfile` | Where the server's signing key lives: `keyfile` (local keypair, unchanged) or `steward` (a Steward policy vault's loopback signer bridge; no locally armed key). Steward mode is currently BLOCKED "waiting on upstream signer hook": the published server has no `AGENTNET_WALLET_REMOTE` hook yet, so write actions refuse with that reason instead of silently falling back to the keyfile. |
 | `AGENTNET_STEWARD_SIGNER_URL` | none | Required with `AGENTNET_SIGNER=steward`: the URL of a running Steward signer bridge (`@stwd/solana-signer` `startSignerBridge`, loopback). Probed live (`GET /pubkey`) at session start and forwarded to the server as `AGENTNET_WALLET_REMOTE` once the hook exists. |
 | `AGENTNET_SIGNER_HOOK` | off | Operator assertion that the spawned server build ships the remote signer hook (e.g. a pinned patched build via `AGENTNET_MCP_COMMAND`). The assertion alone never arms anything: before any spawn the plugin probes the bridge with `GET /pubkey` and refuses (no spawn, no keyfile, honest reason) unless a signer answers with an address. |
+| `AGENTNET_WALLET_REMOTE_TOKEN` | none | Bearer token for the Steward signer bridge: used by the pre-spawn `GET /pubkey` probe and forwarded to the server in steward mode. |
 | `AGENTNET_MCP_COMMAND` | `npx -y @iqlabs-official/agentnet-mcp` | Full spawn command line, whitespace split. Point at a pinned local build to skip npx. |
 | `AGENTNET_NETWORK` | mainnet | Forwarded to the server. Use `devnet` for testing. |
 | `AGENTNET_SKILLS_DIR` | `<stateDir>/skills` | Where the read tier equips free skills. Also forwarded (via `AGENTNET_SKILL_DIRS`) so bought skills land where the eliza skills loader scans. |

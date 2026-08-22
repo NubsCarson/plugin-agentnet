@@ -1,13 +1,22 @@
 {
-  "name": "plugin-agentnet",
+  "name": "@nubscarson/plugin-agentnet",
   "version": "0.0.1",
-  "description": "elizaOS plugin for the AgentNet on-chain skill marketplace. Read tier (search, free equip, profiles) over public HTTP/RPC; write tier (buy, publish, posts, soul, memory) fronts the official @iqlabs-official/agentnet-mcp stdio server, double-gated off by default. Local scaffold; publish name TBD with IQLabs.",
-  "private": true,
+  "description": "AgentNet on-chain skill marketplace for elizaOS agents: catalog search, free skill equip, and wallet profiles over public HTTP/RPC; the gated write tier (buy, publish, posts, soul, memory) fronts the official @iqlabs-official/agentnet-mcp stdio server and stays OFF by default behind AGENTNET_ALLOW_WRITES and AGENTNET_ALLOW_SPEND.",
   "license": "MIT",
-  "repository": { "type": "git", "url": "TBD: publish home pending with IQLabs" },
+  "author": "NubsCarson",
+  "repository": { "type": "git", "url": "git+https://github.com/NubsCarson/plugin-agentnet.git" },
+  "homepage": "https://github.com/NubsCarson/plugin-agentnet#readme",
+  "bugs": { "url": "https://github.com/NubsCarson/plugin-agentnet/issues" },
+  "keywords": ["elizaos", "plugin", "agentnet", "solana", "skills", "marketplace"],
+  "packageType": "plugin",
   "type": "module",
   "main": "src/index.js",
-  "files": ["src", "test", "demo.mjs"],
+  "module": "src/index.js",
+  "exports": {
+    ".": { "import": "./src/index.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["src", "test", "demo.mjs", "LICENSE", ".env.example"],
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
     "test:live": "node --test \"test/live/*.test.js\""
@@ -17,5 +26,111 @@
   },
   "peerDependenciesMeta": {
     "@elizaos/core": { "optional": true }
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "AGENTNET_ALLOW_WRITES": {
+        "type": "string",
+        "description": "Master gate for the write tier. Off (default) means no wallet process is ever spawned and every write action refuses. Set 1/true/yes/on to enable.",
+        "required": false,
+        "sensitive": false,
+        "defaultValue": "0"
+      },
+      "AGENTNET_ALLOW_SPEND": {
+        "type": "string",
+        "description": "Second gate, required on top of AGENTNET_ALLOW_WRITES for value-moving tools (buy_skill, publish_skill). Off by default.",
+        "required": false,
+        "sensitive": false,
+        "defaultValue": "0"
+      },
+      "AGENTNET_WALLET_KEYFILE": {
+        "type": "string",
+        "description": "Solana keypair JSON path for the spawned agentnet-mcp server (created if missing). Its balance is the hard spend ceiling. Ignored in steward signer mode.",
+        "required": false,
+        "sensitive": true
+      },
+      "AGENTNET_SIGNER": {
+        "type": "string",
+        "description": "Where the server's signing key lives: keyfile (default, local keypair) or steward (remote Steward policy-vault signer bridge; no locally armed key).",
+        "required": false,
+        "sensitive": false,
+        "defaultValue": "keyfile"
+      },
+      "AGENTNET_STEWARD_SIGNER_URL": {
+        "type": "string",
+        "description": "Required with AGENTNET_SIGNER=steward: URL of a running Steward signer bridge. Probed live (GET /pubkey) before any spawn; never falls back to the keyfile.",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_SIGNER_HOOK": {
+        "type": "string",
+        "description": "Operator assertion that the spawned server build ships the AGENTNET_WALLET_REMOTE signer hook. The assertion alone arms nothing; the live bridge probe must also pass.",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_WALLET_REMOTE_TOKEN": {
+        "type": "string",
+        "description": "Bearer token for the Steward signer bridge, forwarded to the spawned server and used by the pre-spawn probe.",
+        "required": false,
+        "sensitive": true
+      },
+      "AGENTNET_MCP_COMMAND": {
+        "type": "string",
+        "description": "Full spawn command line for the write-tier server, whitespace split. Point at a pinned local build to skip npx.",
+        "required": false,
+        "sensitive": false,
+        "defaultValue": "npx -y @iqlabs-official/agentnet-mcp"
+      },
+      "AGENTNET_NETWORK": {
+        "type": "string",
+        "description": "Solana network forwarded to the server. Use devnet for testing.",
+        "required": false,
+        "sensitive": false,
+        "defaultValue": "mainnet"
+      },
+      "AGENTNET_SKILLS_DIR": {
+        "type": "string",
+        "description": "Where the read tier equips free skills as SKILL.md files; also forwarded (via AGENTNET_SKILL_DIRS) so bought skills land where the eliza skills loader scans.",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_SKILL_DIRS": {
+        "type": "string",
+        "description": "Extra comma-separated skill directories forwarded to the spawned server on top of AGENTNET_SKILLS_DIR.",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_INDEXER_URL": {
+        "type": "string",
+        "description": "Read-tier catalog indexer endpoint (mainnet default). Also forwarded to the server.",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_GATEWAY_URL": {
+        "type": "string",
+        "description": "Read-tier gateway endpoint for profiles and inscriptions (mainnet default). Also forwarded to the server.",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_RPC_URL": {
+        "type": "string",
+        "description": "Solana RPC endpoint for read-tier metadata lookups (public mainnet default).",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_HOME": {
+        "type": "string",
+        "description": "State root forwarded to the spawned server when set.",
+        "required": false,
+        "sensitive": false
+      },
+      "AGENTNET_ELIZA_CHARACTER": {
+        "type": "string",
+        "description": "Path to the character.json that receives the soul persona, forwarded to the spawned server when set.",
+        "required": false,
+        "sensitive": false
+      }
+    }
   }
 }
