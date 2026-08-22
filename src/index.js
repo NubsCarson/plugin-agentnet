@@ -19,6 +19,7 @@ import { equipAgentnetSkill } from "./actions/equip-skill.js";
 import { agentnetProfile } from "./actions/profile.js";
 import { searchAgentnetSkills } from "./actions/search-skills.js";
 import { writeTierActions } from "./actions/write-tier.js";
+import { closeWriteSession } from "./lib/write-client.js";
 import { agentnetEquipped } from "./providers/equipped.js";
 
 const agentnetPlugin = {
@@ -32,6 +33,14 @@ const agentnetPlugin = {
     // Read tier is stateless HTTP/RPC. The write tier's server process is
     // spawned lazily on the first gated action, so init stays side-effect
     // free and gate-off configurations never start a wallet session.
+  },
+
+  // dispose (plugin.ts:1422) runs on runtime teardown via
+  // runPluginDispose (packages/core/src/plugin-lifecycle.ts:796): close the
+  // cached write-tier server session so the wallet-armed child process never
+  // outlives the runtime. No-op when the write tier never spawned.
+  dispose: async (runtime) => {
+    await closeWriteSession(runtime);
   },
 
   actions: [searchAgentnetSkills, equipAgentnetSkill, agentnetProfile, ...writeTierActions],

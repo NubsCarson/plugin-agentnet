@@ -110,3 +110,18 @@ export function getWriteClient(runtime, connect = spawnConnect) {
   }
   return entry;
 }
+
+/** Runtime-teardown counterpart to getWriteClient, wired to the plugin's
+ *  `dispose` hook: kill this runtime's cached wallet-armed server session so
+ *  the child process never outlives the runtime. Forgets the session first,
+ *  so a teardown racing a fresh action cannot resurrect it. No-op (returns
+ *  false) when no session was ever spawned or the bootstrap already failed. */
+export async function closeWriteSession(runtime) {
+  const entry = sessions.get(runtime);
+  if (!entry) return false;
+  sessions.delete(runtime);
+  const client = await entry.catch(() => null);
+  if (!client) return false;
+  client.close();
+  return true;
+}
