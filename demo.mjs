@@ -38,7 +38,8 @@ rule();
 await say(`\n${C.bold}2. the agent's equipped context (provider)${C.off}`, 1000);
 const prov = plugin.providers[0];
 const pv = await prov.get(runtime, msg("ctx"), {});
-await say((typeof pv === "string" ? pv : pv?.text ?? JSON.stringify(pv)).split("\n").slice(0, 6).join("\n"), 2200);
+const pvText = (typeof pv === "string" ? pv : pv?.text) || `${C.dim}   (nothing equipped in this skills dir yet; equips land here as SKILL.md files)${C.off}`;
+await say(pvText.split("\n").slice(0, 6).join("\n"), 2200);
 rule();
 
 await say(`\n${C.bold}3. write tier: everything dangerous is DOUBLE GATED${C.off}`, 1100);
@@ -56,5 +57,5 @@ await say(`${C.dim}   read only mode: search + verify · full mode: buy, publish
 await say(`${C.dim}   soul, memory · wallet IS the agent id, exactly as she designed it${C.off}`, 1600);
 rule();
 
-await say(`\n${C.bold}${C.gold}66/66 offline tests green · spend gate: zero bypasses found${C.off}`, 1500);
+await say(`\n${C.bold}${C.gold}72/72 offline tests green · spend gate: zero bypasses found${C.off}`, 1500);
 await say(`${C.dim}the agent layer, building the agent layer${C.off}`, 2400);
